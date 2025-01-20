@@ -1,8 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Asegúrate de que `host` esté definida, con un valor predeterminado si no lo está.
-const host = process.env.TAURI_DEV_HOST || 'localhost'; // Si no hay valor en `TAURI_DEV_HOST`, se usa 'localhost'.
+const host = process.env.TAURI_DEV_HOST || 'localhost';
 
 export default defineConfig({
   plugins: [react()],
@@ -15,7 +14,7 @@ export default defineConfig({
   server: {
     port: 1420,
     strictPort: true,
-    host: true, // Se asegura de que se permita el host
+    host: true,
     hmr: host
       ? {
         protocol: "ws",
@@ -28,10 +27,10 @@ export default defineConfig({
     },
     proxy: {
       '/socket.io': {
-        target: 'http://localhost:4000', // Asegúrate de que el puerto sea el correcto.
+        target: 'http://localhost:4000',
         changeOrigin: true,
         secure: false,
-        ws: true,  // Habilita WebSockets
+        ws: true,
       },
     },
 

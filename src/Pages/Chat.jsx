@@ -23,7 +23,7 @@ export const Chat = () => {
             });
 
             socket.on('userList', (users) => {
-                console.log('Usuarios conectados:', users);
+                console.log('Usuarios:', users);
             });
 
             return () => {

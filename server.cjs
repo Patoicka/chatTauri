@@ -26,26 +26,21 @@ const io = socketIo(server, {
 
 let users = [];
 
-// Cuando un usuario se conecta
 io.on('connection', (socket) => {
     console.log('Usuario conectado:', socket.id);
 
-    // Registrar al usuario
     socket.on('join', (username) => {
         users.push({ id: socket.id, username });
         io.emit('userList', users);
     });
 
-    // Recibir mensaje
     socket.on('sendMessage', (message) => {
-        // Emitir el mensaje a todos los usuarios
         io.emit('receiveMessage', message);
     });
 
-    // Cuando el usuario se desconecta
     socket.on('disconnect', () => {
         users = users.filter(user => user.id !== socket.id);
-        io.emit('userList', users); // Actualizar la lista de usuarios
+        io.emit('userList', users);
         console.log('Usuario desconectado:', socket.id);
     });
 });
