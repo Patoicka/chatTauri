@@ -27,7 +27,6 @@ const io = socketIo(server, {
 let users = [];
 
 io.on('connection', (socket) => {
-    console.log('Usuario conectado:', socket.id);
 
     socket.on('join', (username) => {
         users.push({ id: socket.id, username });
@@ -35,14 +34,24 @@ io.on('connection', (socket) => {
     });
 
     socket.on('sendMessage', (message) => {
+        console.log('Mensaje recibido:', message);
         io.emit('receiveMessage', message);
     });
 
     socket.on('disconnect', () => {
         users = users.filter(user => user.id !== socket.id);
         io.emit('userList', users);
-        console.log('Usuario desconectado:', socket.id);
     });
+
+    socket.on('typing', (username) => {
+        console.log(username, 'está escribiendo...');
+        socket.broadcast.emit('userTyping', username);
+    });
+
+    socket.on('stoppedTyping', () => {
+        socket.broadcast.emit('userStoppedTyping');
+    });
+
 });
 
 server.listen(4000, () => {

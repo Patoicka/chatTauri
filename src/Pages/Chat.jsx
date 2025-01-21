@@ -9,6 +9,7 @@ const socket = io('http://localhost:4000');
 export const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [username, setUsername] = useState('');
+    const [typingUser, setTypingUser] = useState('');
 
     const handleUsername = (newUsername) => {
         setUsername(newUsername);
@@ -22,31 +23,44 @@ export const Chat = () => {
                 setMessages((prevMessages) => [...prevMessages, message]);
             });
 
-            socket.on('userList', (users) => {
-                console.log('Usuarios:', users);
+            socket.on('userTyping', (user) => {
+                setTypingUser(user);
+            });
+
+            socket.on('userStoppedTyping', () => {
+                setTypingUser('');
             });
 
             return () => {
                 socket.off('receiveMessage');
-                socket.off('userList');
+                socket.off('userTyping');
+                socket.off('userStoppedTyping');
             };
         }
     }, [username]);
 
     const handleSendMessage = (newMessage, time) => {
-        console.log(time, newMessage);
-
         const message = { user: username, text: newMessage, time: time };
         socket.emit('sendMessage', message);
+    };
+
+    const handleTyping = (isTyping) => {
+        console.log(isTyping);
+
+        if (isTyping) {
+            socket.emit('typing', username);
+        } else {
+            socket.emit('stoppedTyping');
+        };
     };
 
     return (
         <div className="bg-gray-300 w-[50%] mx-auto h-full p-2">
             <Header newUsername={handleUsername} />
 
-            <Messages messages={messages} username={username} />
+            <Messages messages={messages} username={username} typingUser={typingUser} />
 
-            <Input handleSend={handleSendMessage} />
+            <Input handleSend={handleSendMessage} handleTyping={handleTyping} />
         </div>
     );
 };

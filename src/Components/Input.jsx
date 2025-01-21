@@ -1,10 +1,23 @@
 import React, { useState } from 'react';
 
-export const Input = ({ handleSend }) => {
+export const Input = ({ handleSend, handleTyping }) => {
     const [message, setMessage] = useState('');
+    const [typingTimeout, setTypingTimeout] = useState(null);
 
     const handleChange = (e) => {
         setMessage(e.target.value);
+
+        if (handleTyping) {
+            if (typingTimeout) clearTimeout(typingTimeout);
+
+            handleTyping(true);
+
+            const timeout = setTimeout(() => {
+                handleTyping(false);
+            }, 800);
+
+            setTypingTimeout(timeout);
+        }
     };
 
     const handleSubmit = (e) => {
@@ -16,7 +29,6 @@ export const Input = ({ handleSend }) => {
 
         handleSend(message, formattedTime);
         setMessage('');
-
     };
 
     return (
