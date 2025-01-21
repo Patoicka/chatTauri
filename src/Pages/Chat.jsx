@@ -33,8 +33,10 @@ export const Chat = () => {
         }
     }, [username]);
 
-    const handleSendMessage = (newMessage) => {
-        const message = { user: username, text: newMessage };
+    const handleSendMessage = (newMessage, time) => {
+        console.log(time, newMessage);
+
+        const message = { user: username, text: newMessage, time: time };
         socket.emit('sendMessage', message);
     };
 

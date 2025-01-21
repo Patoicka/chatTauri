@@ -11,8 +11,12 @@ export const Input = ({ handleSend }) => {
         e.preventDefault();
         if (message.trim() === '') return;
 
-        handleSend(message);
+        const now = new Date();
+        const formattedTime = now.toLocaleTimeString();
+
+        handleSend(message, formattedTime);
         setMessage('');
+
     };
 
     return (
