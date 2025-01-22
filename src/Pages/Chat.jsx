@@ -40,10 +40,16 @@ export const Chat = () => {
     }, [username]);
 
     const handleSendMessage = (newMessage, time, imageUrl) => {
-        const message = { user: username, text: newMessage, time: time, image: imageUrl };
+        const message = {
+            user: username,
+            text: newMessage || '',
+            time: time || '',
+            image: imageUrl || null,
+        };
         console.log(message);
         socket.emit('sendMessage', message);
     };
+
 
     const handleTyping = (isTyping) => {
         if (isTyping) {

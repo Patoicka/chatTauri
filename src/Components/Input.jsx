@@ -22,31 +22,56 @@ export const Input = ({ handleSend, handleTyping }) => {
             }, 800);
 
             setTypingTimeout(timeout);
-        }
+        };
     };
 
     const handleAddImage = (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        setImageSelect(URL.createObjectURL(file));
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setImageSelect(reader.result);
+        };
+        console.log(reader.result);
+        reader.readAsDataURL(file);
     };
 
     const handleFileChange = () => {
         fileInputRef.current.click();
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (message.trim() === '') return;
+        if (message.trim() === '' && !imageSelect) return;
 
         const now = new Date();
         const formattedTime = now.toLocaleTimeString();
 
-        handleSend(message, formattedTime, imageSelect);
+        let imageUrl = imageSelect || null;
+        let messageCopy = message;
+        let timeCoppy = formattedTime;
 
         setMessage('');
         setImageSelect(null);
+
+        if (imageSelect) {
+            try {
+                const response = await fetch('http://localhost:4000/upload-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageUrl }),
+                });
+
+                const data = await response.json();
+                if (data.url) {
+                    imageUrl = data.url;
+                }
+            } catch (error) {
+                console.error('Error al subir la imagen:', error);
+            };
+        };
+        handleSend(messageCopy, timeCoppy, imageUrl);
     };
 
     const handleImageClick = () => {
