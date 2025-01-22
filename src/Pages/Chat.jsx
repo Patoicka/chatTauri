@@ -39,14 +39,13 @@ export const Chat = () => {
         }
     }, [username]);
 
-    const handleSendMessage = (newMessage, time) => {
-        const message = { user: username, text: newMessage, time: time };
+    const handleSendMessage = (newMessage, time, imageUrl) => {
+        const message = { user: username, text: newMessage, time: time, image: imageUrl };
+        console.log(message);
         socket.emit('sendMessage', message);
     };
 
     const handleTyping = (isTyping) => {
-        console.log(isTyping);
-
         if (isTyping) {
             socket.emit('typing', username);
         } else {
@@ -57,9 +56,7 @@ export const Chat = () => {
     return (
         <div className="bg-gray-300 w-[50%] mx-auto h-full p-2">
             <Header newUsername={handleUsername} />
-
             <Messages messages={messages} username={username} typingUser={typingUser} />
-
             <Input handleSend={handleSendMessage} handleTyping={handleTyping} />
         </div>
     );

@@ -27,14 +27,12 @@ const io = socketIo(server, {
 let users = [];
 
 io.on('connection', (socket) => {
-
     socket.on('join', (username) => {
         users.push({ id: socket.id, username });
         io.emit('userList', users);
     });
 
     socket.on('sendMessage', (message) => {
-        console.log('Mensaje recibido:', message);
         io.emit('receiveMessage', message);
     });
 
@@ -44,7 +42,6 @@ io.on('connection', (socket) => {
     });
 
     socket.on('typing', (username) => {
-        console.log(username, 'está escribiendo...');
         socket.broadcast.emit('userTyping', username);
     });
 
