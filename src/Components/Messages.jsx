@@ -1,9 +1,17 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 
 export const Messages = ({ messages, username, typingUser }) => {
-    console.log(messages);
-
+    const { loader } = useSelector((state) => state.chat);
     const [fullScreen, setFullScreen] = useState(false);
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+    }, [messages, loader]);
+
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
@@ -23,6 +31,7 @@ export const Messages = ({ messages, username, typingUser }) => {
                                     />
                                 </div>
                             )}
+
                             <div className="flex w-1/2 my-0.5">
                                 {messageCopy.image ? (
                                     <div className="flex flex-col bg-white mx-2 p-2 rounded-lg shadow-md">
@@ -59,13 +68,23 @@ export const Messages = ({ messages, username, typingUser }) => {
                     );
                 })}
 
-                {typingUser && (
-                    <div className="absolute bottom-0 text-gray-500 text-sm ">
-                        {typingUser} está escribiendo...
+                {loader && (
+                    <div className="flex w-full justify-end my-0.5">
+                        <div className="flex justify-center items-center bg-white xs:w-[46%] xl:w-[48%] rounded-lg shadow-md py-8 mx-2 p-2">
+                            <div className="w-8 h-8 border-4 border-t-4 border-purple-500 border-solid rounded-full animate-spin border-t-transparent"></div>
+                        </div>
                     </div>
                 )}
 
+                <div ref={messagesEndRef} />
+
+                {typingUser && (
+                    <div className="absolute bottom-0 text-gray-500 text-sm">
+                        {typingUser} está escribiendo...
+                    </div>
+                )}
             </div>
-        </div >
+        </div>
     );
+
 };

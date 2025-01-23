@@ -54,10 +54,12 @@ app.post('/upload-image', async (req, res) => {
 });
 
 let users = [];
+console.log('Usuarios conectados:', users);
 
 io.on('connection', (socket) => {
     socket.on('join', (username) => {
         users.push({ id: socket.id, username });
+        console.log('Usuarios conectados:', username);
         io.emit('userList', users);
     });
 

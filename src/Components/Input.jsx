@@ -1,13 +1,18 @@
 import { faCamera, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setLoader } from '../store/store';
 
 export const Input = ({ handleSend, handleTyping }) => {
+
+    const dispatch = useDispatch();
+    const fileInputRef = useRef(null);
+
     const [message, setMessage] = useState('');
     const [typingTimeout, setTypingTimeout] = useState(null);
     const [imageSelect, setImageSelect] = useState(null);
     const [isImageFullScreen, setIsImageFullScreen] = useState(false);
-    const fileInputRef = useRef(null);
 
     const handleChange = (e) => {
         setMessage(e.target.value);
@@ -33,7 +38,6 @@ export const Input = ({ handleSend, handleTyping }) => {
         reader.onloadend = () => {
             setImageSelect(reader.result);
         };
-        console.log(reader.result);
         reader.readAsDataURL(file);
     };
 
@@ -42,6 +46,8 @@ export const Input = ({ handleSend, handleTyping }) => {
     };
 
     const handleSubmit = async (e) => {
+        dispatch(setLoader(true));
+
         e.preventDefault();
         if (message.trim() === '' && !imageSelect) return;
 
@@ -67,11 +73,15 @@ export const Input = ({ handleSend, handleTyping }) => {
                 if (data.url) {
                     imageUrl = data.url;
                 }
+                dispatch(setLoader(false));
             } catch (error) {
                 console.error('Error al subir la imagen:', error);
+                dispatch(setLoader(false));
             };
         };
         handleSend(messageCopy, timeCoppy, imageUrl);
+
+        dispatch(setLoader(false));
     };
 
     const handleImageClick = () => {
