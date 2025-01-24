@@ -1,4 +1,5 @@
-const cors = require('cors'); // Requerir cors
+const axios = require('axios');
+const cors = require('cors');
 const bodyParser = require('body-parser');
 const express = require('express');
 const http = require('http');
@@ -53,19 +54,51 @@ app.post('/upload-image', async (req, res) => {
     }
 });
 
+const getDeepSeekResponse = async (message) => {
+    try {
+        const response = await axios.post(
+            'https://api.deepseek.com/v1/chat/completions',
+            {
+                model: "deepseek-chat",
+                messages: [
+                    { role: "system", content: "You are a helpful assistant." },
+                    { role: "user", content: message },
+                ],
+                stream: false,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer sk-65cff989781a4cec861920a2d9074488',
+                },
+            }
+        );
+
+        return response.data.choices[0].message.content;
+    } catch (error) {
+        console.error('Error DeepSeek:', error);
+        return "Lo siento, no puedo responder en este momento.";
+    }
+};
+
 let users = [];
-console.log('Usuarios conectados:', users);
 
 io.on('connection', (socket) => {
-    socket.on('join', (username) => {
-        users.push({ id: socket.id, username });
-        console.log('Usuarios conectados:', username);
-        io.emit('userList', users);
-    });
-
-    socket.on('sendMessage', (message) => {
+    socket.on('sendMessage', async (message) => {
         io.emit('receiveMessage', message);
-        console.log('mensaje enviado', message);
+
+        const botResponse = await getDeepSeekResponse(message.text);
+
+        const botMessage = {
+            text: botResponse,
+            user: "ChatBot",
+            time: new Date().toLocaleTimeString(),
+        };
+
+        setTimeout(() => {
+            io.emit('receiveMessage', botMessage);
+            console.log('Respuesta del ChatBot:', botMessage);
+        }, 1000);
     });
 
     socket.on('disconnect', () => {

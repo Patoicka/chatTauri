@@ -46,7 +46,6 @@ export const Chat = () => {
             time: time || '',
             image: imageUrl || null,
         };
-        console.log(message);
         socket.emit('sendMessage', message);
     };
 
