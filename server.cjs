@@ -35,7 +35,6 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.options('*', cors());
 
 app.post('/upload-image', async (req, res) => {
-    console.log('Solicitud recibida en /upload-image:', req.body);
     const { image } = req.body;
 
     if (!image) {
@@ -84,21 +83,33 @@ const getDeepSeekResponse = async (message) => {
 let users = [];
 
 io.on('connection', (socket) => {
+
+    console.log('Conectado al servidor de socket');
     socket.on('sendMessage', async (message) => {
+        const { text, selectChat } = message;
+
         io.emit('receiveMessage', message);
 
-        const botResponse = await getDeepSeekResponse(message.text);
+        if (selectChat) {
+            console.log(selectChat);
 
-        const botMessage = {
-            text: botResponse,
-            user: "ChatBot",
-            time: new Date().toLocaleTimeString(),
-        };
+            io.emit('thinking', true);
 
-        setTimeout(() => {
-            io.emit('receiveMessage', botMessage);
-            console.log('Respuesta del ChatBot:', botMessage);
-        }, 1000);
+            const botResponse = await getDeepSeekResponse(text);
+
+            const botMessage = {
+                text: botResponse,
+                user: "ChatBot",
+                time: new Date().toLocaleTimeString(),
+                image: null,
+            };
+
+            setTimeout(() => {
+                io.emit('receiveMessage', botMessage);
+                io.emit('thinking', false);
+                console.log('Respuesta del ChatBot:', botMessage);
+            }, 1000);
+        }
     });
 
     socket.on('disconnect', () => {

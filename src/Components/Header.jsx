@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 export const Header = ({ newUsername }) => {
+
     const [username, setUsername] = useState('');
 
     const handleUsername = (name) => {

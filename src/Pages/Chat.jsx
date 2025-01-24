@@ -3,13 +3,27 @@ import { io } from 'socket.io-client';
 import { Header } from '../Components/Header';
 import { Messages } from '../Components/Messages';
 import { Input } from '../Components/Input';
+import { setChat } from '../store/store';
+import { useDispatch, useSelector } from 'react-redux';
 
 const socket = io('http://localhost:4000');
 
 export const Chat = () => {
+
+    const { selectChat } = useSelector((state) => state.chat);
+    const dispatch = useDispatch();
+
     const [messages, setMessages] = useState([]);
     const [username, setUsername] = useState('');
     const [typingUser, setTypingUser] = useState('');
+
+    useEffect(() => {
+        dispatch(setChat(true));
+    }, []);
+
+    useEffect(() => {
+        setMessages([]);
+    }, [selectChat]);
 
     const handleUsername = (newUsername) => {
         setUsername(newUsername);
@@ -45,10 +59,10 @@ export const Chat = () => {
             text: newMessage || '',
             time: time || '',
             image: imageUrl || null,
+            selectChat: selectChat,
         };
         socket.emit('sendMessage', message);
     };
-
 
     const handleTyping = (isTyping) => {
         if (isTyping) {
