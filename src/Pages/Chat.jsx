@@ -73,7 +73,7 @@ export const Chat = () => {
     };
 
     return (
-        <div className="bg-gray-300 w-[50%] mx-auto h-full p-2">
+        <div className="bg-gray-300 xs:w-full sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] mx-auto h-full p-2">
             <Header newUsername={handleUsername} />
             <Messages messages={messages} username={username} typingUser={typingUser} />
             <Input handleSend={handleSendMessage} handleTyping={handleTyping} />

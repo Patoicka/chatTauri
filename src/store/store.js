@@ -2,7 +2,7 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     loader: false,
-    selectChat: false,
+    selectChat: true,
 };
 
 export const chatSlice = createSlice({
@@ -19,5 +19,4 @@ export const chatSlice = createSlice({
 });
 
 export const { setLoader, setChat } = chatSlice.actions;
-
 export default chatSlice.reducer;

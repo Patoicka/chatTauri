@@ -67,14 +67,14 @@ export const Messages = ({ messages, username, typingUser }) => {
                                         <div
                                             onClick={() => setFullScreen(!fullScreen)}
                                             className={`${fullScreen
-                                                ? 'fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 flex justify-center items-center z-50'
+                                                ? 'fixed top-0 p-8 left-0 w-full h-full bg-black bg-opacity-95 flex justify-center items-center z-50'
                                                 : ''
                                                 }`}
                                         >
                                             <img
                                                 src={messageCopy.image}
                                                 alt="Mensaje con imagen"
-                                                className={`${fullScreen ? 'xs:w-[35%] xl:w-[25%]' : ''}`}
+                                                className={`${fullScreen ? 'xs:w-[100%] sm:w-[85%] md:w-[75%] lg:w-[60%] xl:w-[50%]' : ''}`}
                                             />
                                         </div>
                                         <p className="flex flex-col w-full">

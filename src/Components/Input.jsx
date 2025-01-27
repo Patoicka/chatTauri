@@ -1,4 +1,4 @@
-import { faCamera, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCamera, faPaperPlane, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -100,9 +100,9 @@ export const Input = ({ handleSend, handleTyping }) => {
             <button
                 type='button'
                 onClick={handleFileChange}
-                className="absolute left-0 mx-2 bg-violet-700 p-1 text-gray-200 text-sm rounded-lg"
+                className="absolute left-0 mx-2 bg-violet-700 p-2 text-gray-200 text-sm rounded-lg"
             >
-                <FontAwesomeIcon icon={faCamera} size="xl" />
+                <FontAwesomeIcon icon={faCamera} size="lg" />
             </button>
 
             <input
@@ -116,11 +116,11 @@ export const Input = ({ handleSend, handleTyping }) => {
                 onChange={(e) => handleChange(e)}
                 placeholder='Escribe un mensaje...'
                 type='text'
-                className={`bg-white h-full w-full rounded-lg pl-11 ${imageSelect ? 'pr-[120px]' : 'pr-16'}`}
+                className={`bg-white h-full w-full rounded-lg pl-14 ${imageSelect ? 'pr-[108px]' : 'pr-14'}`}
             />
 
             {imageSelect && (
-                <div className='absolute right-16 rounded-lg overflow-hidden'>
+                <div className='absolute right-14 rounded-lg overflow-hidden'>
                     <div className='relative'>
                         <FontAwesomeIcon
                             onClick={() => setImageSelect(null)}
@@ -141,24 +141,31 @@ export const Input = ({ handleSend, handleTyping }) => {
 
             <button
                 type='submit'
-                className='absolute right-0 mx-2 bg-violet-700 p-1.5 text-gray-200 text-sm rounded-lg'
+                className='absolute right-0 mx-2 bg-violet-700 p-2 text-gray-200 text-sm rounded-lg'
             >
-                Enviar
+                <FontAwesomeIcon icon={faPaperPlane} size='lg' />
             </button>
 
             {isImageFullScreen && (
-                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-75 flex justify-center items-center z-50">
-                    <div className="flex justify-center w-full relative">
-                        <img src={imageSelect} alt="Imagen en pantalla completa" className="xs:w-[50%] xl:w-[30%]" />
-                        <button
-                            onClick={closeFullScreenImage}
-                            className="absolute xs:right-52 xl:right-[680px] top-1 text-white text-xl"
-                        >
-                            <FontAwesomeIcon icon={faTimes} />
-                        </button>
+                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-85 flex justify-center items-center z-50">
+                    <div className="flex w-full items-center justify-center xs:p-10 sm:p-20 md:p-24 lg:p-56 xl:p-24">
+                        <div className="relative xs:w-[100%] sm:w-[65%] md:w-[51%] lg:w-[40%] xl:w-[25%] bg-white rounded-xl shadow-lg overflow-hidden">
+                            <img
+                                src={imageSelect}
+                                alt="Imagen en pantalla completa"
+                                className="rounded-xl w-full h-full object-contain"
+                            />
+                            <button
+                                onClick={closeFullScreenImage}
+                                className="absolute right-2 top-1 text-white text-xl hover:text-red-600"
+                            >
+                                <FontAwesomeIcon icon={faTimes} size="lg" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
+
         </form>
     );
 };
