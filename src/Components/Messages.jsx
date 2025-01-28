@@ -10,8 +10,6 @@ export const Messages = ({ messages, username, typingUser }) => {
     const [botThinking, setBotThinking] = useState(false);
     const messagesEndRef = useRef(null);
 
-    console.log(botThinking);
-
     useEffect(() => {
         socket.on('thinking', (thinking) => {
             setBotThinking(thinking);
@@ -42,9 +40,6 @@ export const Messages = ({ messages, username, typingUser }) => {
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
-
-                {selectChat && <div className="flex justify-center w-full pb-1"> <p className="text-sm font-bold italic"> Hablando con ChatBox </p> </div>}
-
                 {filteredMessages.map((message, index) => {
                     const messageCopy = { ...message, time: message.time.slice(0, 5) };
                     return (
@@ -108,8 +103,8 @@ export const Messages = ({ messages, username, typingUser }) => {
                 <div ref={messagesEndRef} />
 
                 {botThinking && (
-                    <div className="flex h-full items-end justify-start text-gray-500 text-sm pt-3">
-                        <div className="w-4 h-4 border-2 border-t-2 border-gray-500 border-solid rounded-full animate-spin border-t-transparent mr-2"></div>
+                    <div className="flex h-full items-end justify-start text-neutral-900 text-sm pt-3">
+                        <div className="w-4 h-4 border-2 border-t-2 border-neutral-900 border-solid rounded-full animate-spin border-t-transparent mr-2"></div>
                         <span>Pensando...</span>
                     </div>
                 )}

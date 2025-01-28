@@ -1,4 +1,4 @@
-import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faRobot, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,13 +28,26 @@ export const Header = ({ newUsername }) => {
     return (
         <div className="bg-white h-[12%] rounded-lg">
             <div className="flex flex-col h-full px-2 justify-center">
-                <div className='flex justify-between px-2 py-1'>
-                    <h1 className="font-semibold"> 2 usuarios conectados </h1>
-                    <h1 className='flex'>
-                        <p className='pr-2'> Bot </p>
-                        <input type="radio" name="Bot" onClick={checkBot} checked={selectChat ? true : false} />
-                    </h1>
-                </div>
+                {!selectChat ?
+                    <div div className='flex justify-between px-2 py-1'>
+                        <h1 className="font-semibold"> 2 usuarios conectados </h1>
+                        <h1 className='flex'>
+                            <p className='pr-2'> Bot </p>
+                            <input type="radio" name="Bot" onClick={checkBot} checked={selectChat ? true : false} />
+                        </h1>
+                    </div>
+                    :
+                    <div className='flex justify-between px-2 py-1'>
+                        <h1 className="flex items-center font-semibold"> ChatBox  <FontAwesomeIcon className='pl-1.5 mb-0.5' icon={faRobot} /> </h1>
+                        <div className='flex'>
+                            <h1 className='flex'>
+                                <p className='pr-2'> Bot </p>
+                                <input type="radio" name="Bot" onClick={checkBot} checked={selectChat ? true : false} />
+                            </h1>
+
+                        </div>
+                    </div>
+                }
                 <div className="flex">
                     {!selectChat ?
                         <>
@@ -64,6 +77,6 @@ export const Header = ({ newUsername }) => {
                     }
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
