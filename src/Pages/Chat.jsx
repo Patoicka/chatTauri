@@ -3,30 +3,25 @@ import { io } from 'socket.io-client';
 import { Header } from '../Components/Header';
 import { Messages } from '../Components/Messages';
 import { Input } from '../Components/Input';
-import { setChat } from '../store/store';
 import { useDispatch, useSelector } from 'react-redux';
+import { Home } from './Home';
 
 const socket = io('http://localhost:4000');
 
 export const Chat = () => {
 
-    const { selectChat } = useSelector((state) => state.chat);
-    const dispatch = useDispatch();
+    const { selectChat, home } = useSelector((state) => state.chat);
 
     const [messages, setMessages] = useState([]);
     const [username, setUsername] = useState('');
     const [typingUser, setTypingUser] = useState('');
 
     useEffect(() => {
-        dispatch(setChat(true));
-    }, []);
-
-    useEffect(() => {
         setMessages([]);
     }, [selectChat]);
 
-    const handleUsername = (newUsername) => {
-        setUsername(newUsername);
+    const selectNewChat = (username) => {
+        setUsername(username);
     };
 
     useEffect(() => {
@@ -73,10 +68,18 @@ export const Chat = () => {
     };
 
     return (
-        <div className="bg-gray-300 xs:w-full sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] mx-auto h-full p-2">
-            <Header newUsername={handleUsername} />
-            <Messages messages={messages} username={username} typingUser={typingUser} />
-            <Input handleSend={handleSendMessage} handleTyping={handleTyping} />
+        <div className="bg-gray-300 xs:w-full sm:w-[80%] md:w-[70%] lg:w-[60%] xl:w-[50%] mx-auto h-full overflow-hidden">
+
+            {!home ?
+                <>
+                    <Header newUsername={username} />
+                    <Messages messages={messages} username={username} typingUser={typingUser} />
+                    <Input handleSend={handleSendMessage} handleTyping={handleTyping} />
+                </>
+                :
+                <Home newUsername={selectNewChat} />
+            }
+
         </div>
     );
 };

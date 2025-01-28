@@ -1,8 +1,25 @@
+import { faRobot, faUser } from '@fortawesome/free-solid-svg-icons';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
     loader: false,
-    selectChat: true,
+    selectChat: null,
+    home: true,
+    user: '',
+    users: [
+        {
+            username: 'bluepond',
+            image: faUser,
+        },
+        {
+            username: 'greenpond',
+            image: faUser,
+        },
+        {
+            username: 'ChatBot',
+            image: faRobot,
+        },
+    ]
 };
 
 export const chatSlice = createSlice({
@@ -15,8 +32,14 @@ export const chatSlice = createSlice({
         setChat(state, action) {
             state.selectChat = action.payload;
         },
+        setUser(state, action) {
+            state.user = action.payload;
+        },
+        setHome(state, action) {
+            state.home = action.payload;
+        },
     },
 });
 
-export const { setLoader, setChat } = chatSlice.actions;
+export const { setLoader, setChat, setUser, setHome } = chatSlice.actions;
 export default chatSlice.reducer;
