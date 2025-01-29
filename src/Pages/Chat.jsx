@@ -10,7 +10,7 @@ const socket = io('http://localhost:4000');
 
 export const Chat = () => {
 
-    const { selectChat, home } = useSelector((state) => state.chat);
+    const { selectChat, home, user } = useSelector((state) => state.chat);
 
     const [messages, setMessages] = useState([]);
     const [username, setUsername] = useState('');
@@ -25,8 +25,8 @@ export const Chat = () => {
     };
 
     useEffect(() => {
-        if (username) {
-            socket.emit('join', username);
+        if (user) {
+            socket.emit('join', user);
 
             socket.on('receiveMessage', (message) => {
                 setMessages((prevMessages) => [...prevMessages, message]);
@@ -46,16 +46,17 @@ export const Chat = () => {
                 socket.off('userStoppedTyping');
             };
         }
-    }, [username]);
+    }, [user]);
 
     const handleSendMessage = (newMessage, time, imageUrl) => {
         const message = {
-            user: username,
+            user: user,
             text: newMessage || '',
             time: time || '',
             image: imageUrl || null,
             selectChat: selectChat,
         };
+        console.log(message);
         socket.emit('sendMessage', message);
     };
 
@@ -73,7 +74,7 @@ export const Chat = () => {
             {!home ?
                 <>
                     <Header newUsername={username} />
-                    <Messages messages={messages} username={username} typingUser={typingUser} />
+                    <Messages messages={messages} typingUser={typingUser} />
                     <Input handleSend={handleSendMessage} handleTyping={handleTyping} />
                 </>
                 :

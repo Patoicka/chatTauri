@@ -9,12 +9,11 @@ export const Home = ({ newUsername }) => {
     const dispatch = useDispatch();
 
     console.log(user);
-    console.log(users);
 
-    const goChat = (username) => {
-        if (username !== 'ChatBox') {
-            dispatch(setChat(false));
-        } else dispatch(setChat(true));
+    const goChat = (username) => {  
+        if (username === 'ChatBot') {
+            dispatch(setChat(true));
+        } else dispatch(setChat(false));
 
         newUsername(username);
         dispatch(setHome(false));
@@ -26,9 +25,9 @@ export const Home = ({ newUsername }) => {
 
     return (
         <div>
-            <div div className='px-8 pt-8'>
+            <div div className='px-8 py-4 border-b-2 border-gray-400 bg-white'>
                 <h1 className='text-4xl font-bold'> Chats </h1>
-                <div className={`flex items-center pt-2 ${user === '' && 'border-b-2 border-gray-400'}`}>
+                <div className='flex items-center pt-2'>
                     <p className='opacity-80'> Selecciona un Chat. </p>
                     <div className='flex pl-4'>
                         <h1 className={`mx-2 cursor-pointer ${user === 'greenpond' ? 'border-b-2 border-green-500' : null}`} onClick={() => selectUser('greenpond')}> GreenPond </h1>
@@ -42,10 +41,9 @@ export const Home = ({ newUsername }) => {
                     {users
                         .filter(newUser => newUser.username !== user)
                         .map((newUser, index) => {
-                            console.log(newUser.username);
                             return (
                                 <div key={index} className='flex relative flex-col w-full h-full px-4 py-2'>
-                                    <div className='border-t w-full ml-10' />
+                                    <div className='border-t-2 w-full ml-10' />
                                     <div
                                         onClick={() => goChat(newUser.username)}
                                         className='flex items-center h-full pt-3 cursor-pointer'

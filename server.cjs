@@ -85,9 +85,11 @@ let users = [];
 io.on('connection', (socket) => {
 
     console.log('Conectado al servidor de socket');
+
     socket.on('sendMessage', async (message) => {
         const { text, selectChat } = message;
 
+        console.log(message);
         io.emit('receiveMessage', message);
 
         if (selectChat) {

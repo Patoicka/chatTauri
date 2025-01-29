@@ -4,8 +4,9 @@ import { io } from "socket.io-client";
 
 const socket = io('http://localhost:4000');
 
-export const Messages = ({ messages, username, typingUser }) => {
-    const { loader, selectChat } = useSelector((state) => state.chat);
+export const Messages = ({ messages, typingUser }) => {
+
+    const { loader, selectChat, user } = useSelector((state) => state.chat);
     const [fullScreen, setFullScreen] = useState(false);
     const [botThinking, setBotThinking] = useState(false);
     const messagesEndRef = useRef(null);
@@ -24,7 +25,7 @@ export const Messages = ({ messages, username, typingUser }) => {
         selectChat
             ? messages.filter(
                 (message) =>
-                    message.user === 'ChatBot' || message.user === username
+                    message.user === 'ChatBot' || message.user === user
             )
             : messages.filter(
                 (message) =>
@@ -45,13 +46,17 @@ export const Messages = ({ messages, username, typingUser }) => {
                     return (
                         <div
                             key={index}
-                            className={`flex flex-col w-full ${messageCopy.user === username ? 'items-end' : 'items-start'}`}
+                            className={`flex flex-col w-full ${messageCopy.user === user ? 'items-end' : 'items-start'}`}
                         >
                             {(index === 0 || messageCopy.user !== filteredMessages[index - 1].user) && (
                                 <div className="flex items-center mb-1">
                                     <h1 className="opacity-85 text-sm">{messageCopy.user}</h1>
                                     <div
-                                        className={`w-6 h-6 rounded-full mx-1 ${messageCopy.user === 'greenpond' ? 'bg-green-500' : 'bg-blue-500'}`}
+                                        className={`w-6 h-6 rounded-full mx-1 
+                                            ${messageCopy.user === 'greenpond'
+                                                ? 'bg-green-500' : messageCopy.user === 'bluepond'
+                                                    ? 'bg-blue-500' : messageCopy.user === 'ChatBot'
+                                                        ? 'bg-violet-600' : null}`}
                                     />
                                 </div>
                             )}
@@ -62,14 +67,17 @@ export const Messages = ({ messages, username, typingUser }) => {
                                         <div
                                             onClick={() => setFullScreen(!fullScreen)}
                                             className={`${fullScreen
-                                                ? 'fixed top-0 p-8 left-0 w-full h-full bg-black bg-opacity-95 flex justify-center items-center z-50'
+                                                ? 'fixed top-0 left-0 w-full h-full bg-black bg-opacity-95 flex justify-center items-center z-50'
                                                 : ''
                                                 }`}
                                         >
                                             <img
                                                 src={messageCopy.image}
                                                 alt="Mensaje con imagen"
-                                                className={`${fullScreen ? 'xs:w-[100%] sm:w-[85%] md:w-[75%] lg:w-[60%] xl:w-[50%]' : ''}`}
+                                                className={`${fullScreen
+                                                    ? 'max-w-[95vw] max-h-[95vh] object-contain'
+                                                    : ''
+                                                    }`}
                                             />
                                         </div>
                                         <p className="flex flex-col w-full">
