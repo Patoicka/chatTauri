@@ -1,14 +1,18 @@
+import { faEdit, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { io } from "socket.io-client";
 
 const socket = io('http://localhost:4000');
 
-export const Messages = ({ messages, typingUser }) => {
-
+export const Messages = ({ messages: initialMessages, typingUser }) => {
     const { loader, selectChat, user } = useSelector((state) => state.chat);
     const [fullScreen, setFullScreen] = useState(false);
     const [botThinking, setBotThinking] = useState(false);
+    const [menu, setMenu] = useState(false);
+    const [editingMessageId, setEditingMessageId] = useState(null);
+    const [messages, setMessages] = useState(initialMessages);
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
@@ -21,22 +25,30 @@ export const Messages = ({ messages, typingUser }) => {
         };
     }, []);
 
-    const filteredMessages =
-        selectChat
-            ? messages.filter(
-                (message) =>
-                    message.user === 'ChatBot' || message.user === user
-            )
-            : messages.filter(
-                (message) =>
-                    message.user !== 'ChatBot'
-            );
+    const filteredMessages = selectChat
+        ? messages.filter(
+            (message) => message.user === 'ChatBot' || message.user === user
+        )
+        : messages.filter(
+            (message) => message.user !== 'ChatBot'
+        );
 
     useEffect(() => {
         if (messagesEndRef.current) {
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
     }, [messages, loader]);
+
+    const handleRightClick = () => {
+        setMenu(!menu);
+    };
+
+    // Función para actualizar un mensaje
+    const updateMessage = (index, newText) => {
+        const updatedMessages = [...messages];
+        updatedMessages[index].text = newText;
+        setMessages(updatedMessages);
+    };
 
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
@@ -49,7 +61,7 @@ export const Messages = ({ messages, typingUser }) => {
                             className={`flex flex-col w-full ${messageCopy.user === user ? 'items-end' : 'items-start'}`}
                         >
                             {(index === 0 || messageCopy.user !== filteredMessages[index - 1].user) && (
-                                <div className="flex items-center mb-1">
+                                <div className='flex items-center mb-1'>
                                     <h1 className="opacity-85 text-sm">{messageCopy.user}</h1>
                                     <div
                                         className={`w-6 h-6 rounded-full mx-1 
@@ -61,7 +73,20 @@ export const Messages = ({ messages, typingUser }) => {
                                 </div>
                             )}
 
-                            <div className='flex w-1/2 my-0.5'>
+                            <div className='flex relative items-center w-1/2 my-0.5'>
+                                {menu && messageCopy.user === user && (
+                                    <div className="flex justify-center bg-white text-gray-600 absolute left-1 -top-9 w-1/6 mx-2 p-2 rounded-lg shadow-md">
+                                        <FontAwesomeIcon
+                                            icon={faEdit}
+                                            className="cursor-pointer"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setEditingMessageId(index);
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                {messageCopy.user === user && <FontAwesomeIcon icon={faEllipsisVertical} onClick={handleRightClick} className="cursor-pointer" />}
                                 {messageCopy.image ? (
                                     <div className="flex flex-col bg-white mx-2 p-2 rounded-lg shadow-md">
                                         <div
@@ -81,7 +106,24 @@ export const Messages = ({ messages, typingUser }) => {
                                             />
                                         </div>
                                         <p className="flex flex-col w-full">
-                                            {messageCopy.text}
+                                            {editingMessageId === index ? (
+                                                <input
+                                                    type="text"
+                                                    value={messageCopy.text}
+                                                    onChange={(e) => updateMessage(index, e.target.value)}
+                                                    onBlur={() => setEditingMessageId(null)}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            setMenu(false);
+                                                            setEditingMessageId(null);
+                                                        }
+                                                    }}
+                                                    autoFocus
+                                                    className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
+                                                />
+                                            ) : (
+                                                <>{messageCopy.text}</>
+                                            )}
                                             <span className="text-end text-[11px]">
                                                 {messageCopy.time}
                                             </span>
@@ -89,7 +131,24 @@ export const Messages = ({ messages, typingUser }) => {
                                     </div>
                                 ) : (
                                     <div className="flex flex-col w-full bg-white mx-2 p-2 rounded-lg shadow-md">
-                                        {messageCopy.text}
+                                        {editingMessageId === index ? (
+                                            <input
+                                                type="text"
+                                                value={messageCopy.text}
+                                                onChange={(e) => updateMessage(index, e.target.value)}
+                                                onBlur={() => setEditingMessageId(null)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        setMenu(false);
+                                                        setEditingMessageId(null);
+                                                    }
+                                                }}
+                                                autoFocus
+                                                className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
+                                            />
+                                        ) : (
+                                            <>{messageCopy.text}</>
+                                        )}
                                         <span className="text-end text-[11px]">
                                             {messageCopy.time}
                                         </span>
