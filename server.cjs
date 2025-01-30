@@ -88,13 +88,10 @@ io.on('connection', (socket) => {
 
     socket.on('sendMessage', async (message) => {
         const { text, selectChat } = message;
-
-        console.log(message);
+        console.log('Mensaje recibido en el servidor:', message);
         io.emit('receiveMessage', message);
 
         if (selectChat) {
-            console.log(selectChat);
-
             io.emit('thinking', true);
 
             const botResponse = await getDeepSeekResponse(text);
@@ -112,6 +109,11 @@ io.on('connection', (socket) => {
                 console.log('Respuesta del ChatBot:', botMessage);
             }, 1000);
         }
+    });
+
+    socket.on('editMessage', (editedMessage) => {
+        console.log('Mensaje editado recibido:', editedMessage);
+        io.emit('messageEdited', editedMessage);
     });
 
     socket.on('disconnect', () => {

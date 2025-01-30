@@ -29,9 +29,18 @@ export const Chat = () => {
             socket.emit('join', user);
 
             socket.on('receiveMessage', (message) => {
-                console.log(message);
+                console.log('Mensaje recibido:', message);
                 setMessages((prevMessages) => [...prevMessages, message]);
+            });
 
+            socket.on('messageEdited', (editedMessage) => {
+                setMessages((prevMessages) =>
+                    prevMessages.map((msg) =>
+                        msg.time === editedMessage.time && msg.user === editedMessage.user
+                            ? editedMessage
+                            : msg
+                    )
+                );
             });
 
             socket.on('userTyping', (user) => {
@@ -44,6 +53,7 @@ export const Chat = () => {
 
             return () => {
                 socket.off('receiveMessage');
+                socket.off('messageEdited');
                 socket.off('userTyping');
                 socket.off('userStoppedTyping');
             };

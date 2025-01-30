@@ -16,8 +16,10 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     const messagesEndRef = useRef(null);
 
     useEffect(() => {
-        setMessages(initialMessages);
-    }, [initialMessages]);
+        socket.on('receiveMessage', (message) => {
+            setMessages((prevMessages) => [...prevMessages, message]);
+        });
+    }, []);
 
     useEffect(() => {
         socket.on('thinking', (thinking) => {
@@ -30,10 +32,10 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     }, []);
 
     const filteredMessages = selectChat
-        ? messages.filter(
+        ? initialMessages.filter(
             (message) => message.user === 'ChatBot' || message.user === user
         )
-        : messages.filter(
+        : initialMessages.filter(
             (message) => message.user !== 'ChatBot'
         );
 
@@ -62,9 +64,13 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     };
 
     const updateMessage = (index, newText) => {
-        const updatedMessages = [...messages];
+        const updatedMessages = [...filteredMessages];
+
         updatedMessages[index].text = newText;
         setMessages(updatedMessages);
+
+        const editedMessage = updatedMessages[index];
+        socket.emit('editMessage', editedMessage);
     };
 
     useEffect(() => {
@@ -85,6 +91,7 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
                 {filteredMessages.map((message, index) => {
                     const messageCopy = { ...message, time: message.time.slice(0, 5) };
+                    console.log(messageCopy.text);
                     return (
                         <div
                             key={index}
@@ -103,10 +110,10 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                 </div>
                             )}
 
-                            <div className={`flex items-center max-w-[50%] my-0.5 ${messageCopy.user === user ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`flex  items-center w-1/2 my-0.5 ${messageCopy.user === user ? 'justify-end' : 'justify-start'}`}>
                                 {activeMenuIndex === index && messageCopy.user === user && (
                                     <div
-                                        className="flex cursor-pointer justify-center bg-white text-gray-600 w-1/6 mx-2 p-2 rounded-lg shadow-md"
+                                        className="flex cursor-pointer justify-center bg-white text-gray-600 w-1/12 mx-2 p-2 rounded-lg shadow-md"
                                         onClick={(e) => goOptions(e, index)}
                                     >
                                         <FontAwesomeIcon icon={faEdit} />
@@ -120,7 +127,7 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                     />
                                 )}
                                 {messageCopy.image ? (
-                                    <div className="flex flex-col bg-white mx-2 p-2 rounded-lg shadow-md">
+                                    <div className="flex flex-col bg-white w-11/12 mx-2 p-2 rounded-lg shadow-md">
                                         <div
                                             onClick={() => setFullScreen(!fullScreen)}
                                             className={`${fullScreen
@@ -143,16 +150,17 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                                     <input
                                                         type="text"
                                                         value={messageCopy.text}
-                                                        onChange={(e) => updateMessage(index, e.target.value)}
-                                                        onBlur={() => {
-                                                            setEditingMessageId(null);
+                                                        onChange={(e) => {
+                                                            updateMessage(index, e.target.value);
                                                         }}
+                                                        onBlur={() => setEditingMessageId(null)}
                                                         onKeyDown={(e) => {
                                                             if (e.key === 'Enter') {
+                                                                updateMessage(index, e.target.value);
                                                                 setEditingMessageId(null);
                                                             }
                                                         }}
-                                                        className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
+                                                        className="w-full border border-gray-300 pr-7 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
                                                     />
                                                     <FontAwesomeIcon
                                                         icon={faCheckCircle}
@@ -169,18 +177,19 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col justify-center relative bg-white mx-2 p-2 rounded-lg shadow-md">
+                                    <div className="flex flex-col w-11/12 justify-center relative bg-white mx-2 p-2 rounded-lg shadow-md">
                                         {editingMessageId === index ? (
                                             <>
                                                 <input
                                                     type="text"
                                                     value={messageCopy.text}
-                                                    onChange={(e) => updateMessage(index, e.target.value)}
-                                                    onBlur={() => {
-                                                        setEditingMessageId(null);
+                                                    onChange={(e) => {
+                                                        updateMessage(index, e.target.value);
                                                     }}
+                                                    onBlur={() => setEditingMessageId(null)}
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Enter') {
+                                                            updateMessage(index, e.target.value);
                                                             setEditingMessageId(null);
                                                         }
                                                     }}
@@ -193,7 +202,9 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                                 />
                                             </>
                                         ) : (
-                                            <p className="break-words break-all whitespace-pre-wrap overflow-hidden">{messageCopy.text}</p>
+                                            <p className="text-justify break-words whitespace-pre-wrap overflow-hidden">
+                                                {messageCopy.text}
+                                            </p>
                                         )}
                                         <span className="text-end text-[11px]">
                                             {messageCopy.time}

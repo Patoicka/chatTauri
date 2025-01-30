@@ -18,7 +18,7 @@ const initialState = {
         {
             username: 'ChatBot',
             image: faRobot,
-        },
+        },  
     ]
 };
 

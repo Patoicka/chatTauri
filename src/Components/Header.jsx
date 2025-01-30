@@ -6,8 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { setChat, setHome } from '../store/store';
 
 export const Header = ({ newUsername }) => {
-    console.log(newUsername);
-    const { user } = useSelector((state) => state.chat);
+
     const dispatch = useDispatch();
 
     const goBack = () => {
