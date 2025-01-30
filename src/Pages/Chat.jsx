@@ -29,7 +29,9 @@ export const Chat = () => {
             socket.emit('join', user);
 
             socket.on('receiveMessage', (message) => {
+                console.log(message);
                 setMessages((prevMessages) => [...prevMessages, message]);
+
             });
 
             socket.on('userTyping', (user) => {
@@ -56,7 +58,6 @@ export const Chat = () => {
             image: imageUrl || null,
             selectChat: selectChat,
         };
-        console.log(message);
         socket.emit('sendMessage', message);
     };
 

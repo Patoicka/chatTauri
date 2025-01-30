@@ -1,4 +1,4 @@
-import { faEdit, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faEdit, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -10,10 +10,14 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     const { loader, selectChat, user } = useSelector((state) => state.chat);
     const [fullScreen, setFullScreen] = useState(false);
     const [botThinking, setBotThinking] = useState(false);
-    const [menu, setMenu] = useState(false);
+    const [activeMenuIndex, setActiveMenuIndex] = useState(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
-    const [messages, setMessages] = useState(initialMessages);
+    const [messages, setMessages] = useState([]);
     const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        setMessages(initialMessages);
+    }, [initialMessages]);
 
     useEffect(() => {
         socket.on('thinking', (thinking) => {
@@ -39,16 +43,42 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         }
     }, [messages, loader]);
 
-    const handleRightClick = () => {
-        setMenu(!menu);
+    const handleRightClick = (index, e) => {
+        e.stopPropagation();
+        if (activeMenuIndex === index) {
+            setActiveMenuIndex(null);
+        } else {
+            setActiveMenuIndex(index);
+        }
     };
 
-    // Función para actualizar un mensaje
+    const goOptions = (e, index) => {
+        e.stopPropagation();
+        if (editingMessageId === index) {
+            setEditingMessageId(null);
+        } else {
+            setEditingMessageId(index);
+        }
+    };
+
     const updateMessage = (index, newText) => {
         const updatedMessages = [...messages];
         updatedMessages[index].text = newText;
         setMessages(updatedMessages);
     };
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (activeMenuIndex !== null) {
+                setActiveMenuIndex(null);
+            }
+        };
+
+        document.addEventListener('click', handleClickOutside);
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [activeMenuIndex]);
 
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
@@ -73,20 +103,22 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                 </div>
                             )}
 
-                            <div className='flex relative items-center w-1/2 my-0.5'>
-                                {menu && messageCopy.user === user && (
-                                    <div className="flex justify-center bg-white text-gray-600 absolute left-1 -top-9 w-1/6 mx-2 p-2 rounded-lg shadow-md">
-                                        <FontAwesomeIcon
-                                            icon={faEdit}
-                                            className="cursor-pointer"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setEditingMessageId(index);
-                                            }}
-                                        />
+                            <div className={`flex items-center max-w-[50%] my-0.5 ${messageCopy.user === user ? 'justify-end' : 'justify-start'}`}>
+                                {activeMenuIndex === index && messageCopy.user === user && (
+                                    <div
+                                        className="flex cursor-pointer justify-center bg-white text-gray-600 w-1/6 mx-2 p-2 rounded-lg shadow-md"
+                                        onClick={(e) => goOptions(e, index)}
+                                    >
+                                        <FontAwesomeIcon icon={faEdit} />
                                     </div>
                                 )}
-                                {messageCopy.user === user && <FontAwesomeIcon icon={faEllipsisVertical} onClick={handleRightClick} className="cursor-pointer" />}
+                                {messageCopy.user === user && (
+                                    <FontAwesomeIcon
+                                        icon={faEllipsisVertical}
+                                        onClick={(e) => handleRightClick(index, e)}
+                                        className="cursor-pointer"
+                                    />
+                                )}
                                 {messageCopy.image ? (
                                     <div className="flex flex-col bg-white mx-2 p-2 rounded-lg shadow-md">
                                         <div
@@ -105,49 +137,63 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                                     }`}
                                             />
                                         </div>
-                                        <p className="flex flex-col w-full">
+                                        <div className="flex flex-col relative w-full">
                                             {editingMessageId === index ? (
-                                                <input
-                                                    type="text"
-                                                    value={messageCopy.text}
-                                                    onChange={(e) => updateMessage(index, e.target.value)}
-                                                    onBlur={() => setEditingMessageId(null)}
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
-                                                            setMenu(false);
+                                                <>
+                                                    <input
+                                                        type="text"
+                                                        value={messageCopy.text}
+                                                        onChange={(e) => updateMessage(index, e.target.value)}
+                                                        onBlur={() => {
                                                             setEditingMessageId(null);
-                                                        }
-                                                    }}
-                                                    autoFocus
-                                                    className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
-                                                />
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                setEditingMessageId(null);
+                                                            }
+                                                        }}
+                                                        className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
+                                                    />
+                                                    <FontAwesomeIcon
+                                                        icon={faCheckCircle}
+                                                        className="absolute mx-4 cursor-pointer text-gray-500 hover:text-purple-700"
+                                                        onClick={() => setEditingMessageId(null)}
+                                                    />
+                                                </>
                                             ) : (
-                                                <>{messageCopy.text}</>
+                                                <p className="break-words break-all whitespace-pre-wrap overflow-hidden">{messageCopy.text}</p>
                                             )}
                                             <span className="text-end text-[11px]">
                                                 {messageCopy.time}
                                             </span>
-                                        </p>
+                                        </div>
                                     </div>
                                 ) : (
-                                    <div className="flex flex-col w-full bg-white mx-2 p-2 rounded-lg shadow-md">
+                                    <div className="flex flex-col justify-center relative bg-white mx-2 p-2 rounded-lg shadow-md">
                                         {editingMessageId === index ? (
-                                            <input
-                                                type="text"
-                                                value={messageCopy.text}
-                                                onChange={(e) => updateMessage(index, e.target.value)}
-                                                onBlur={() => setEditingMessageId(null)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        setMenu(false);
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={messageCopy.text}
+                                                    onChange={(e) => updateMessage(index, e.target.value)}
+                                                    onBlur={() => {
                                                         setEditingMessageId(null);
-                                                    }
-                                                }}
-                                                autoFocus
-                                                className="w-full border border-gray-300 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
-                                            />
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            setEditingMessageId(null);
+                                                        }
+                                                    }}
+                                                    className="w-full border border-gray-300 pr-7 rounded p-1 focus:outline-none focus:border-2 focus:gray-blue-500 focus:rounded"
+                                                />
+                                                <FontAwesomeIcon
+                                                    icon={faCheckCircle}
+                                                    className="absolute top-[18px] right-3 cursor-pointer text-gray-500 hover:text-purple-700"
+                                                    onClick={() => setEditingMessageId(null)}
+                                                />
+                                            </>
                                         ) : (
-                                            <>{messageCopy.text}</>
+                                            <p className="break-words break-all whitespace-pre-wrap overflow-hidden">{messageCopy.text}</p>
                                         )}
                                         <span className="text-end text-[11px]">
                                             {messageCopy.time}
