@@ -5,9 +5,25 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const cloudinary = require('cloudinary').v2;
+const mysql = require('mysql2');
 
 const app = express();
 const server = http.createServer(app);
+
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'admin_chat',
+    password: '199624',
+    database: 'chatBot'
+});
+
+db.connect((err) => {
+    if (err) {
+        console.error('Error al conectar a la base de datos: ' + err.stack);
+        return;
+    }
+    console.log('Conectado a la base de datos MySQL con ID ' + db.threadId);
+});
 
 const io = socketIo(server, {
     cors: {
@@ -18,6 +34,7 @@ const io = socketIo(server, {
     transports: ['websocket', 'polling'],
 });
 
+// Configuración de Cloudinary
 cloudinary.config({
     cloud_name: 'di461de4z',
     api_key: '631417838377461',
@@ -54,6 +71,9 @@ app.post('/upload-image', async (req, res) => {
 });
 
 const getDeepSeekResponse = async (message) => {
+
+    console.log('Mensaje bot:', message);
+
     try {
         const response = await axios.post(
             'https://api.deepseek.com/v1/chat/completions',
@@ -72,7 +92,7 @@ const getDeepSeekResponse = async (message) => {
                 },
             }
         );
-
+        console.log(response.data.choices[0].message.content);
         return response.data.choices[0].message.content;
     } catch (error) {
         console.error('Error DeepSeek:', error);
@@ -83,8 +103,6 @@ const getDeepSeekResponse = async (message) => {
 let users = [];
 
 io.on('connection', (socket) => {
-
-    console.log('Conectado al servidor de socket');
 
     socket.on('sendMessage', async (message) => {
         const { text, selectChat } = message;
