@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { setChat, setHome, setUser } from '../store/store';
+import { setChat } from '../store/store';
 
 export const Home = ({ newUsername }) => {
 

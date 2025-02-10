@@ -73,6 +73,34 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         socket.emit('editMessage', editedMessage);
     };
 
+    const selectOption = (option) => {
+        console.log(option);
+
+        switch (option) {
+            case 'find':
+                console.log('🔍 Buscando mensajes...');
+                socket.emit("findMessages");
+
+                socket.on("foundMessages", (messages) => {
+                    console.log("📥 Mensajes recibidos:", messages);
+                    setMessages(messages);
+                });
+
+                break;
+
+            case 'add':
+                console.log('Crear');
+                break;
+
+            case 'delete':
+                console.log('Eliminar');
+                break;
+
+            default:
+                break;
+        }
+    };
+
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (activeMenuIndex !== null) {
@@ -91,7 +119,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
                 {filteredMessages.map((message, index) => {
                     const messageCopy = { ...message, time: message.time.slice(0, 5) };
-                    console.log(messageCopy.text);
                     return (
                         <div
                             key={index}
@@ -119,13 +146,13 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                         <FontAwesomeIcon icon={faEdit} />
                                     </div>
                                 )}
-                                {messageCopy.user === user && (
+                                {/* {messageCopy.user === user && (
                                     <FontAwesomeIcon
                                         icon={faEllipsisVertical}
                                         onClick={(e) => handleRightClick(index, e)}
                                         className="cursor-pointer"
                                     />
-                                )}
+                                )} */}
                                 {messageCopy.image ? (
                                     <div className="flex flex-col bg-white w-11/12 mx-2 p-2 rounded-lg shadow-md">
                                         <div
@@ -238,6 +265,18 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                         <span>{typingUser} está escribiendo...</span>
                     </div>
                 )}
+
+                {(messages.length === 0 && selectChat) && (
+                    <div className="flex flex-col h-full w-full items-center justify-end text-sm">
+                        <p className="bg-white text-black font-semibold p-1.5 shadow-md rounded-full"> Selecciona una opción </p>
+                        <div className="flex w-full justify-around px-20 mt-3">
+                            <button onClick={() => selectOption('find')} className="bg-black rounded-full p-2 text-white font-semibold"> Buscar Ticket </button>
+                            <button onClick={() => selectOption('add')} className="bg-black rounded-full p-2 text-white font-semibold"> Crear Ticket </button>
+                            <button onClick={() => selectOption('delete')} className="bg-black rounded-full p-2 text-white font-semibold"> Eliminar Ticket </button>
+                        </div>
+                    </div>
+                )}
+
             </div>
         </div>
     );

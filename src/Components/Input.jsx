@@ -46,6 +46,8 @@ export const Input = ({ handleSend, handleTyping }) => {
     };
 
     const handleSubmit = async (e) => {
+        console.log('Entra submit');
+
         dispatch(setLoader(true));
 
         e.preventDefault();
@@ -54,7 +56,7 @@ export const Input = ({ handleSend, handleTyping }) => {
         const now = new Date();
         const formattedTime = now.toLocaleTimeString();
 
-        let imageUrl = imageSelect || null;
+        let imageUrl = imageSelect || '';
         let messageCopy = message;
         let timeCoppy = formattedTime;
 
