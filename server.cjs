@@ -84,12 +84,13 @@ const getDeepSeekResponse = async (message) => {
 
 io.on("connection", (socket) => {
     socket.on("findMessages", () => {
-        const sql = "SELECT * FROM chatbot ORDER BY time DESC";
+        const sql = "SELECT * FROM chatbot ORDER BY time ASC";
         db.query(sql, (err, results) => {
             if (err) {
                 console.error("Error al obtener mensajes:", err);
                 return;
-             }
+            }
+            console.log(results);
             socket.emit("foundMessages", results);
         });
     });
@@ -136,6 +137,20 @@ io.on("connection", (socket) => {
                 console.log("Respuesta del ChatBot:", botMessage);
             }, 1000);
         }
+    });
+
+    socket.on("deleteMessage", (messageId) => {
+        console.log(`Eliminar mensaje con ID: ${messageId}`);
+
+        const sql = "DELETE FROM chatbot WHERE id = ?";
+        db.query(sql, [messageId], (err, result) => {
+            if (err) {
+                console.error("Error al eliminar mensaje:", err);
+                return;
+            }
+            console.log(`Mensaje con ID ${messageId} eliminado`);
+            io.emit("messageDeleted", messageId);  // Notifica a todos los clientes que se ha eliminado el mensaje
+        });
     });
 
     // 🔹 Eliminar mensaje de la BD si selectChat es true

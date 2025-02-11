@@ -30,8 +30,10 @@ export const Chat = () => {
             const handleReceiveMessage = (message) => {
                 console.log('Mensaje recibido:', message);
                 setMessages((prevMessages) => {
-                    const exists = prevMessages.some((msg) => msg.id === message.id);
-                    return exists ? prevMessages : [...prevMessages, message];
+                    if (prevMessages.some((msg) => msg.time === message.time && msg.user === message.user)) {
+                        return prevMessages;
+                    }
+                    return [...prevMessages, message];
                 });
             };
 
@@ -58,7 +60,6 @@ export const Chat = () => {
             socket.on('userTyping', handleTypingUser);
             socket.on('userStoppedTyping', handleStoppedTyping);
 
-            // 🛑 LIMPIAR EVENTOS CUANDO EL COMPONENTE SE DESMONTE O `user` CAMBIE
             return () => {
                 socket.off('receiveMessage', handleReceiveMessage);
                 socket.off('messageEdited', handleEditMessage);

@@ -1,25 +1,30 @@
-import { faCheckCircle, faEdit, faEllipsisVertical } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faEdit, faEllipsisVertical, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
+import { setChatOption, setMessages, setOptionType } from "../store/store";
 
 const socket = io('http://localhost:4000');
 
 export const Messages = ({ messages: initialMessages, typingUser }) => {
-    const { loader, selectChat, user } = useSelector((state) => state.chat);
+    const { loader, selectChat, user, messages, optionType, chatOption } = useSelector((state) => state.chat);
+    const dispatch = useDispatch();
+    const messagesEndRef = useRef(null);
+
     const [fullScreen, setFullScreen] = useState(false);
     const [botThinking, setBotThinking] = useState(false);
     const [activeMenuIndex, setActiveMenuIndex] = useState(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const messagesEndRef = useRef(null);
+    const [newTicket, setNewTicket] = useState('');
+
+    console.log(chatOption);
+    console.log(messages);
+
 
     useEffect(() => {
-        socket.on('receiveMessage', (message) => {
-            setMessages((prevMessages) => [...prevMessages, message]);
-        });
-    }, []);
+        dispatch(setMessages(initialMessages));
+    }, [dispatch]);
 
     useEffect(() => {
         socket.on('thinking', (thinking) => {
@@ -67,33 +72,59 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         const updatedMessages = [...filteredMessages];
 
         updatedMessages[index].text = newText;
-        setMessages(updatedMessages);
+        dispatch(setMessages(updatedMessages));
 
         const editedMessage = updatedMessages[index];
         socket.emit('editMessage', editedMessage);
     };
 
     const selectOption = (option) => {
-        console.log(option);
-
         switch (option) {
             case 'find':
-                console.log('🔍 Buscando mensajes...');
-                socket.emit("findMessages");
-
-                socket.on("foundMessages", (messages) => {
-                    console.log("📥 Mensajes recibidos:", messages);
-                    setMessages(messages);
-                });
-
+                dispatch(setChatOption(true));
+                dispatch(setOptionType('find'));
                 break;
 
             case 'add':
+                dispatch(setChatOption(true));
+                dispatch(setOptionType('add'));
                 console.log('Crear');
                 break;
 
             case 'delete':
+                dispatch(setChatOption(true));
+                dispatch(setOptionType('delete'));
                 console.log('Eliminar');
+                break;
+
+            default:
+                break;
+        };
+    };
+
+    const selectSearch = (type) => {
+        switch (type) {
+            case 'all':
+                console.log('🔍 Buscando mensajes...');
+                socket.emit("findMessages");
+
+                socket.once("foundMessages", (receivedMessages) => {
+                    console.log("📥 Mensajes recibidos:", receivedMessages);
+
+                    const botMessages = receivedMessages.map(msg => ({
+                        ...msg,
+                        user: 'ChatBot'
+                    }));
+
+                    dispatch(setMessages([
+                        ...messages,
+                        { user: 'ChatBot', text: "Estos son los resultados:", time: new Date().toLocaleTimeString().slice(0, 5) },
+                        ...botMessages
+                    ]));
+                });
+                break;
+
+            case 'id':
                 break;
 
             default:
@@ -114,17 +145,34 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         };
     }, [activeMenuIndex]);
 
+    const sendMessage = () => {
+        if (!newTicket.trim()) return;
+
+        const messageData = {
+            text: newTicket,
+            user: "Usuario",
+            time: new Date().toLocaleTimeString().slice(0, 5),
+            image: "",
+            selectChat: true,
+        };
+
+        socket.emit("sendMessage", messageData);
+
+        dispatch(setMessages(messageData));
+        setNewTicket("");
+    };
+
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
-                {filteredMessages.map((message, index) => {
+                {messages.map((message, index) => {
                     const messageCopy = { ...message, time: message.time.slice(0, 5) };
                     return (
                         <div
                             key={index}
                             className={`flex flex-col w-full ${messageCopy.user === user ? 'items-end' : 'items-start'}`}
                         >
-                            {(index === 0 || messageCopy.user !== filteredMessages[index - 1].user) && (
+                            {(index === 0 || messageCopy.user !== messages[index - 1].user) && (
                                 <div className='flex items-center mb-1'>
                                     <h1 className="opacity-85 text-sm">{messageCopy.user}</h1>
                                     <div
@@ -269,11 +317,51 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                 {(messages.length === 0 && selectChat) && (
                     <div className="flex flex-col h-full w-full items-center justify-end text-sm">
                         <p className="bg-white text-black font-semibold p-1.5 shadow-md rounded-full"> Selecciona una opción </p>
-                        <div className="flex w-full justify-around px-20 mt-3">
-                            <button onClick={() => selectOption('find')} className="bg-black rounded-full p-2 text-white font-semibold"> Buscar Ticket </button>
-                            <button onClick={() => selectOption('add')} className="bg-black rounded-full p-2 text-white font-semibold"> Crear Ticket </button>
-                            <button onClick={() => selectOption('delete')} className="bg-black rounded-full p-2 text-white font-semibold"> Eliminar Ticket </button>
-                        </div>
+
+                        {chatOption ?
+                            <>
+                                {optionType === 'find' ?
+
+                                    <div className="flex w-full justify-around px-32 mt-3">
+                                        <button onClick={() => selectSearch('all')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Todos </button>
+                                        {/* <button onClick={() => selectSearch('id')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Id </button> */}
+                                    </div>
+
+                                    : null}
+
+
+                                {optionType === 'add' ?
+
+                                    <div className="flex flex-col w-full items-center justify-around px-32 mt-3">
+                                        <div className="text-center relative">
+                                            <span className="font-semibold mb-2"> Escribe el mensaje </span>
+                                            <input type="text" className="rounded-lg pr-7 py-2 pl-2 w-full" onChange={(e) => setNewTicket(e.target.value)} />
+                                            <FontAwesomeIcon onClick={sendMessage} className="absolute right-2 top-8 cursor-pointer" icon={faPaperPlane} />
+                                        </div>
+                                    </div>
+
+                                    : null}
+
+                                {optionType === 'delete' ?
+
+                                    <div className="flex w-full items-center justify-around px-32 mt-3">
+                                        <button onClick={() => selectSearch('all')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Todos </button>
+                                        <button onClick={() => selectSearch('id')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Id </button>
+
+                                    </div>
+
+                                    : null}
+
+                            </>
+
+                            :
+                            <div className="flex w-full justify-around px-20 mt-3">
+                                <button onClick={() => selectOption('find')} className="bg-black rounded-full p-2 text-white font-semibold"> Buscar Ticket </button>
+                                <button onClick={() => selectOption('add')} className="bg-black rounded-full p-2 text-white font-semibold"> Crear Ticket </button>
+                                <button onClick={() => selectOption('delete')} className="bg-black rounded-full p-2 text-white font-semibold"> Eliminar Ticket </button>
+                            </div>
+                        }
+
                     </div>
                 )}
 
