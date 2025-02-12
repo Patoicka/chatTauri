@@ -1,17 +1,18 @@
-import { faCheckCircle, faEdit, faEllipsisVertical, faPaperPlane } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faEdit } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
-import { setChatOption, setMessages, setOptionType } from "../store/store";
+import { setMessages } from "../store/store";
 import { AddTicket } from "./AddTicket";
 import { FindTicket } from "./FindTicket";
 import { DeleteTicket } from "./DeleteTicket";
+import { SelectOption } from "./SelectOption";
 
 const socket = io('http://localhost:4000');
 
 export const Messages = ({ messages: initialMessages, typingUser }) => {
-    const { loader, selectChat, user, messages, optionType, chatOption } = useSelector((state) => state.chat);
+    const { loader, selectChat, user, messages, optionType, chatOption, firstMessage } = useSelector((state) => state.chat);
     const dispatch = useDispatch();
     const messagesEndRef = useRef(null);
 
@@ -19,11 +20,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     const [botThinking, setBotThinking] = useState(false);
     const [activeMenuIndex, setActiveMenuIndex] = useState(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
-    const [newTicket, setNewTicket] = useState('');
-
-    useEffect(() => {
-        dispatch(setMessages(initialMessages));
-    }, [dispatch]);
 
     useEffect(() => {
         socket.on('thinking', (thinking) => {
@@ -77,30 +73,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         socket.emit('editMessage', editedMessage);
     };
 
-    const selectOption = (option) => {
-        switch (option) {
-            case 'find':
-                dispatch(setChatOption(true));
-                dispatch(setOptionType('find'));
-                break;
-
-            case 'add':
-                dispatch(setChatOption(true));
-                dispatch(setOptionType('add'));
-                console.log('Crear');
-                break;
-
-            case 'delete':
-                dispatch(setChatOption(true));
-                dispatch(setOptionType('delete'));
-                console.log('Eliminar');
-                break;
-
-            default:
-                break;
-        };
-    };
-
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (activeMenuIndex !== null) {
@@ -114,28 +86,11 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         };
     }, [activeMenuIndex]);
 
-    const sendMessage = () => {
-        if (!newTicket.trim()) return;
-
-        const messageData = {
-            text: newTicket,
-            user: "Usuario",
-            time: new Date().toLocaleTimeString().slice(0, 5),
-            image: "",
-            selectChat: true,
-        };
-
-        socket.emit("sendMessage", messageData);
-
-        dispatch(setMessages([...messages, messageData]));
-        setNewTicket("");
-    };
-
     return (
         <div className="xs:h-[76%] xl:h-[80%] py-2">
             <div className="flex relative flex-col h-full w-full px-2 py-2 overflow-y-auto">
                 {messages.map((message, index) => {
-                    const messageCopy = { ...message, time: message.time.slice(0, 5) };
+                    const messageCopy = { ...message, date: message.date.slice(0, 5) };
                     return (
                         <div
                             key={index}
@@ -276,12 +231,11 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                     </div>
                 )}
 
-                {(messages.length === 0 && selectChat) && (
+                {firstMessage ?
                     <div className="flex flex-col h-full w-full items-center justify-end text-sm">
                         <p className={`bg-white text-black font-semibold p-2 shadow-md rounded-full ${optionType === '' ? 'block' : 'hidden'}`}>
                             ¿Cómo puedo ayudar?
                         </p>
-
                         {chatOption ?
                             <>
                                 {optionType === 'find' ? <FindTicket /> : null}
@@ -289,19 +243,10 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                 {optionType === 'add' ? <AddTicket /> : null}
 
                                 {optionType === 'delete' ? <DeleteTicket /> : null}
-
                             </>
-
-                            :
-                            <div className="flex w-full justify-around px-20 mt-3">
-                                <button onClick={() => selectOption('find')} className="bg-black rounded-full p-2 text-white font-semibold"> Buscar Ticket </button>
-                                <button onClick={() => selectOption('add')} className="bg-black rounded-full p-2 text-white font-semibold"> Crear Ticket </button>
-                                <button onClick={() => selectOption('delete')} className="bg-black rounded-full p-2 text-white font-semibold"> Eliminar Ticket </button>
-                            </div>
-                        }
-
+                            : <SelectOption />}
                     </div>
-                )}
+                    : null}
 
             </div>
         </div >

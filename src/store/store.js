@@ -5,8 +5,10 @@ const initialState = {
     selectChat: true,
     user: 'bluepond',
     messages: [],
-    chatOption: false,
+    chatOption: false,  
     optionType: '',
+    firstMessage: true,
+    optionResult: [],
 };
 
 export const chatSlice = createSlice({
@@ -28,8 +30,14 @@ export const chatSlice = createSlice({
         setOptionType(state, action) {
             state.optionType = action.payload;
         },
+        setFirstMessages(state, action) {
+            state.firstMessage = action.payload;
+        },
+        setOptionResult(state, action) {
+            state.optionResult = action.payload;
+        },
     },
 });
 
-export const { setLoader, setChat, setMessages, setChatOption, setOptionType } = chatSlice.actions;
+export const { setLoader, setChat, setMessages, setChatOption, setOptionType, setFirstMessages, setOptionResult } = chatSlice.actions;
 export default chatSlice.reducer;

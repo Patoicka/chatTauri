@@ -1,20 +1,28 @@
 import React from 'react'
+import { useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
+import { setMessages } from '../store/store';
 
 export const DeleteTicket = () => {
 
     const socket = io('http://localhost:4000');
+    const dispatch = useDispatch();
 
     const selectDelete = (type) => {
         console.log(type);
 
         if (type === 'all') {
-            console.log('🗑 Eliminando todos los mensajes...');
-            socket.emit("deleteMessage", "all");
 
+            const botMessage = {
+                user: "ChatBot",
+                text: "Datos eliminados correctamente.",
+                date: new Date().toISOString(),
+                image: "",
+            };
+
+            socket.emit("deleteMessage", "all");
             socket.once("allMessagesDeleted", () => {
-                console.log("✅ Todos los mensajes han sido eliminados");
-                dispatch(setMessages([]));
+                dispatch(setMessages([botMessage]));
             });
 
         } else if (type === 'id') {

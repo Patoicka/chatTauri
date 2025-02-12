@@ -4,11 +4,22 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
-const cloudinary = require("cloudinary").v2;
 const mysql = require("mysql2");
+const multer = require("multer");
 
 const app = express();
 const server = http.createServer(app);
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, "uploads/"); // Asegúrate de que esta carpeta exista en tu proyecto
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + "_" + file.originalname);
+    },
+});
+
+const upload = multer({ storage: storage });
 
 const db = mysql.createConnection({
     host: "localhost",
@@ -29,20 +40,13 @@ db.connect(err => {
     });
 });
 
-
 const io = socketIo(server, {
     cors: {
-        origin: ["http://localhost:1420", "http://localhost:3001"],
-        methods: ["GET", "POST", "OPTIONS"],
+        origin: "*",
+        methods: ["GET", "POST"],
         credentials: true,
     },
     transports: ["websocket", "polling"],
-});
-
-cloudinary.config({
-    cloud_name: "di461de4z",
-    api_key: "631417838377461",
-    api_secret: "GPPQllpSBXcWM4oRzL0YMVyUUnE",
 });
 
 app.use(cors({
@@ -53,34 +57,16 @@ app.use(cors({
 app.use(bodyParser.json({ limit: "10mb" }));
 app.options("*", cors());
 
-const getDeepSeekResponse = async (message) => {
-    console.log("Mensaje bot:", message);
-
-    try {
-        const response = await axios.post(
-            "https://api.deepseek.com/v1/chat/completions",
-            {
-                model: "deepseek-chat",
-                messages: [
-                    { role: "system", content: "You are a helpful assistant." },
-                    { role: "user", content: message },
-                ],
-                stream: false,
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: "Bearer sk-65cff989781a4cec861920a2d9074488",
-                },
-            }
-        );
-        console.log(response.data.choices[0].message.content);
-        return response.data.choices[0].message.content;
-    } catch (error) {
-        console.error("Error DeepSeek:", error);
-        return "Lo siento, no puedo responder en este momento.";
+app.post("/upload-image", upload.single("file"), (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, error: "No file uploaded" });
     }
-};
+
+    console.log("Archivo subido:", req.file);
+
+    const imageUrl = `/uploads/${req.file.filename}`;
+    res.json({ success: true, imageUrl });
+});
 
 io.on("connection", (socket) => {
     socket.on("findMessages", () => {
@@ -95,13 +81,15 @@ io.on("connection", (socket) => {
         });
     });
 
-    socket.on("sendMessage", async (message) => {
+    socket.on("sendMessage", async (message, think) => {
         const { usuario, asunto, descripcion, date, imagen, selectChat } = message;
-        console.log("Mensaje recibido en el servidor:", message);
         io.emit("receiveMessage", message);
-
         if (selectChat) {
-            io.emit("thinking", true);
+            if (!think) {
+                io.emit("thinking", false);
+            } else {
+                io.emit("thinking", true);
+            };
 
             const sql = "INSERT INTO chatbot (usuario, asunto, descripcion, date, imagen) VALUES (?, ?, ?, ?, ?)";
             db.query(sql, [usuario, asunto, descripcion, date, imagen], (err, result) => {
@@ -112,32 +100,6 @@ io.on("connection", (socket) => {
                 const savedMessage = { id: result.insertId, ...message };
                 io.emit("receiveMessage", savedMessage);
             });
-
-            // const botResponse = await getDeepSeekResponse(text);
-
-            /*  const botMessage = {
-                 text: botResponse,
-                 user: "ChatBot",
-                 time: new Date().toISOString(),
-                 image: '',
-             };
- 
-             console.log('Respueta del bot:', botResponse); */
-
-
-            /*  setTimeout(() => {
-                 db.query(sql, ["ChatBot", botResponse, botMessage.time, botMessage.image], (err, result) => {
-                     if (err) {
-                         console.error("Error al guardar respuesta del bot:", err);
-                         return;
-                     }
-                     botMessage.id = result.insertId;
-                     io.emit("receiveMessage", botMessage);
-                 });
- 
-                 io.emit("thinking", false);
-                 console.log("Respuesta del ChatBot:", botMessage);
-             }, 1000); */
         }
     });
 
@@ -153,7 +115,7 @@ io.on("connection", (socket) => {
                     return;
                 }
                 console.log("Todos los mensajes fueron eliminados.");
-                io.emit("allMessagesDeleted"); // Emitir evento para notificar a todos
+                io.emit("allMessagesDeleted");
             });
         } else {
             console.log(`Eliminar mensaje con ID: ${messageId}`);
@@ -173,7 +135,6 @@ io.on("connection", (socket) => {
         }
     });
 
-
     socket.on("typing", (username) => {
         socket.broadcast.emit("userTyping", username);
     });
@@ -181,10 +142,6 @@ io.on("connection", (socket) => {
     socket.on("stoppedTyping", () => {
         socket.broadcast.emit("userStoppedTyping");
     });
-
-    // socket.on("disconnect", () => {
-    //     console.log("Usuario desconectado:", socket.id);
-    // });
 });
 
 server.listen(4000, () => {

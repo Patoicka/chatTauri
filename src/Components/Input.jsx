@@ -1,8 +1,8 @@
 import { faCamera, faPaperPlane, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setLoader } from '../store/store';
+import { setFirstMessages, setLoader } from '../store/store';
 
 export const Input = ({ handleSend, handleTyping }) => {
 
@@ -13,6 +13,12 @@ export const Input = ({ handleSend, handleTyping }) => {
     const [typingTimeout, setTypingTimeout] = useState(null);
     const [imageSelect, setImageSelect] = useState(null);
     const [isImageFullScreen, setIsImageFullScreen] = useState(false);
+
+    useEffect(() => {
+        if (message.length > 0) {
+            dispatch(setFirstMessages(false));
+        } else dispatch(setFirstMessages(true));
+    }, [message]);
 
     const handleChange = (e) => {
         setMessage(e.target.value);
@@ -46,19 +52,17 @@ export const Input = ({ handleSend, handleTyping }) => {
     };
 
     const handleSubmit = async (e) => {
-        console.log('Entra submit');
-
-        dispatch(setLoader(true));
-
         e.preventDefault();
         if (message.trim() === '' && !imageSelect) return;
 
         const now = new Date();
-        const formattedTime = now.toLocaleTimeString();
+        const formattedTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
         let imageUrl = imageSelect || '';
         let messageCopy = message;
         let timeCoppy = formattedTime;
+
+        console.log(timeCoppy);
 
         setMessage('');
         setImageSelect(null);
@@ -85,6 +89,7 @@ export const Input = ({ handleSend, handleTyping }) => {
 
         dispatch(setLoader(false));
     };
+
 
     const handleImageClick = () => {
         setIsImageFullScreen(true);
