@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import { setChatOption, setMessages, setOptionType } from "../store/store";
+import { AddTicket } from "./AddTicket";
+import { FindTicket } from "./FindTicket";
+import { DeleteTicket } from "./DeleteTicket";
 
 const socket = io('http://localhost:4000');
 
@@ -17,10 +20,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
     const [activeMenuIndex, setActiveMenuIndex] = useState(null);
     const [editingMessageId, setEditingMessageId] = useState(null);
     const [newTicket, setNewTicket] = useState('');
-
-    console.log(chatOption);
-    console.log(messages);
-
 
     useEffect(() => {
         dispatch(setMessages(initialMessages));
@@ -102,36 +101,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
         };
     };
 
-    const selectSearch = (type) => {
-        switch (type) {
-            case 'all':
-                console.log('🔍 Buscando mensajes...');
-                socket.emit("findMessages");
-
-                socket.once("foundMessages", (receivedMessages) => {
-                    console.log("📥 Mensajes recibidos:", receivedMessages);
-
-                    const botMessages = receivedMessages.map(msg => ({
-                        ...msg,
-                        user: 'ChatBot'
-                    }));
-
-                    dispatch(setMessages([
-                        ...messages,
-                        { user: 'ChatBot', text: "Estos son los resultados:", time: new Date().toLocaleTimeString().slice(0, 5) },
-                        ...botMessages
-                    ]));
-                });
-                break;
-
-            case 'id':
-                break;
-
-            default:
-                break;
-        }
-    };
-
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (activeMenuIndex !== null) {
@@ -158,7 +127,7 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
 
         socket.emit("sendMessage", messageData);
 
-        dispatch(setMessages(messageData));
+        dispatch(setMessages([...messages, messageData]));
         setNewTicket("");
     };
 
@@ -194,13 +163,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                                         <FontAwesomeIcon icon={faEdit} />
                                     </div>
                                 )}
-                                {/* {messageCopy.user === user && (
-                                    <FontAwesomeIcon
-                                        icon={faEllipsisVertical}
-                                        onClick={(e) => handleRightClick(index, e)}
-                                        className="cursor-pointer"
-                                    />
-                                )} */}
                                 {messageCopy.image ? (
                                     <div className="flex flex-col bg-white w-11/12 mx-2 p-2 rounded-lg shadow-md">
                                         <div
@@ -316,41 +278,17 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
 
                 {(messages.length === 0 && selectChat) && (
                     <div className="flex flex-col h-full w-full items-center justify-end text-sm">
-                        <p className="bg-white text-black font-semibold p-1.5 shadow-md rounded-full"> Selecciona una opción </p>
+                        <p className={`bg-white text-black font-semibold p-2 shadow-md rounded-full ${optionType === '' ? 'block' : 'hidden'}`}>
+                            ¿Cómo puedo ayudar?
+                        </p>
 
                         {chatOption ?
                             <>
-                                {optionType === 'find' ?
+                                {optionType === 'find' ? <FindTicket /> : null}
 
-                                    <div className="flex w-full justify-around px-32 mt-3">
-                                        <button onClick={() => selectSearch('all')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Todos </button>
-                                        {/* <button onClick={() => selectSearch('id')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Id </button> */}
-                                    </div>
+                                {optionType === 'add' ? <AddTicket /> : null}
 
-                                    : null}
-
-
-                                {optionType === 'add' ?
-
-                                    <div className="flex flex-col w-full items-center justify-around px-32 mt-3">
-                                        <div className="text-center relative">
-                                            <span className="font-semibold mb-2"> Escribe el mensaje </span>
-                                            <input type="text" className="rounded-lg pr-7 py-2 pl-2 w-full" onChange={(e) => setNewTicket(e.target.value)} />
-                                            <FontAwesomeIcon onClick={sendMessage} className="absolute right-2 top-8 cursor-pointer" icon={faPaperPlane} />
-                                        </div>
-                                    </div>
-
-                                    : null}
-
-                                {optionType === 'delete' ?
-
-                                    <div className="flex w-full items-center justify-around px-32 mt-3">
-                                        <button onClick={() => selectSearch('all')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Todos </button>
-                                        <button onClick={() => selectSearch('id')} className="bg-black rounded-full w-14 p-2 text-white font-semibold"> Id </button>
-
-                                    </div>
-
-                                    : null}
+                                {optionType === 'delete' ? <DeleteTicket /> : null}
 
                             </>
 
@@ -366,6 +304,6 @@ export const Messages = ({ messages: initialMessages, typingUser }) => {
                 )}
 
             </div>
-        </div>
+        </div >
     );
 };

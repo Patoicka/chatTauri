@@ -84,7 +84,7 @@ const getDeepSeekResponse = async (message) => {
 
 io.on("connection", (socket) => {
     socket.on("findMessages", () => {
-        const sql = "SELECT * FROM chatbot ORDER BY time ASC";
+        const sql = "SELECT * FROM chatbot ORDER BY date ASC";
         db.query(sql, (err, results) => {
             if (err) {
                 console.error("Error al obtener mensajes:", err);
@@ -96,74 +96,83 @@ io.on("connection", (socket) => {
     });
 
     socket.on("sendMessage", async (message) => {
-        const { text, selectChat, user, time, image } = message;
+        const { usuario, asunto, descripcion, date, imagen, selectChat } = message;
         console.log("Mensaje recibido en el servidor:", message);
         io.emit("receiveMessage", message);
 
         if (selectChat) {
             io.emit("thinking", true);
 
-            const sql = "INSERT INTO chatbot (user, text, time, image) VALUES (?, ?, ?, ?)";
-            db.query(sql, [user, text, time, image], (err, result) => {
+            const sql = "INSERT INTO chatbot (usuario, asunto, descripcion, date, imagen) VALUES (?, ?, ?, ?, ?)";
+            db.query(sql, [usuario, asunto, descripcion, date, imagen], (err, result) => {
                 if (err) {
                     console.error("Error al guardar mensaje:", err);
                     return;
-                }
-
+                };
                 const savedMessage = { id: result.insertId, ...message };
                 io.emit("receiveMessage", savedMessage);
             });
 
-            const botResponse = await getDeepSeekResponse(text);
+            // const botResponse = await getDeepSeekResponse(text);
 
-            const botMessage = {
-                text: botResponse,
-                user: "ChatBot",
-                time: new Date().toISOString(),
-                image: '',
-            };
+            /*  const botMessage = {
+                 text: botResponse,
+                 user: "ChatBot",
+                 time: new Date().toISOString(),
+                 image: '',
+             };
+ 
+             console.log('Respueta del bot:', botResponse); */
 
-            setTimeout(() => {
-                db.query(sql, ["ChatBot", botResponse, botMessage.time, botMessage.image], (err, result) => {
-                    if (err) {
-                        console.error("Error al guardar respuesta del bot:", err);
-                        return;
-                    }
-                    botMessage.id = result.insertId;
-                    io.emit("receiveMessage", botMessage);
-                });
 
-                io.emit("thinking", false);
-                console.log("Respuesta del ChatBot:", botMessage);
-            }, 1000);
+            /*  setTimeout(() => {
+                 db.query(sql, ["ChatBot", botResponse, botMessage.time, botMessage.image], (err, result) => {
+                     if (err) {
+                         console.error("Error al guardar respuesta del bot:", err);
+                         return;
+                     }
+                     botMessage.id = result.insertId;
+                     io.emit("receiveMessage", botMessage);
+                 });
+ 
+                 io.emit("thinking", false);
+                 console.log("Respuesta del ChatBot:", botMessage);
+             }, 1000); */
         }
     });
 
     socket.on("deleteMessage", (messageId) => {
-        console.log(`Eliminar mensaje con ID: ${messageId}`);
+        console.log('ID para eliminar: ', messageId);
 
-        const sql = "DELETE FROM chatbot WHERE id = ?";
-        db.query(sql, [messageId], (err, result) => {
-            if (err) {
-                console.error("Error al eliminar mensaje:", err);
-                return;
-            }
-            console.log(`Mensaje con ID ${messageId} eliminado`);
-            io.emit("messageDeleted", messageId);  // Notifica a todos los clientes que se ha eliminado el mensaje
-        });
+        if (messageId === "all") {
+            console.log("Eliminar todos los mensajes");
+            const sql = "DELETE FROM chatbot";
+            db.query(sql, (err, result) => {
+                if (err) {
+                    console.error("Error al eliminar todos los mensajes:", err);
+                    return;
+                }
+                console.log("Todos los mensajes fueron eliminados.");
+                io.emit("allMessagesDeleted"); // Emitir evento para notificar a todos
+            });
+        } else {
+            console.log(`Eliminar mensaje con ID: ${messageId}`);
+            const sql = "DELETE FROM chatbot WHERE id = ?";
+            db.query(sql, [messageId], (err, result) => {
+                if (err) {
+                    console.error("Error al eliminar mensaje:", err);
+                    return;
+                }
+                if (result.affectedRows > 0) {
+                    console.log(`Mensaje con ID ${messageId} eliminado`);
+                    io.emit("messageDeleted", messageId); // Notificar a todos los clientes
+                } else {
+                    console.log(`No se encontró un mensaje con ID ${messageId}`);
+                }
+            });
+        }
     });
 
-    // 🔹 Eliminar mensaje de la BD si selectChat es true
-    // socket.on("deleteMessage", (messageId) => {
-    //     const sql = "DELETE FROM messages WHERE id = ?";
-    //     db.query(sql, [messageId], (err) => {
-    //         if (err) {
-    //             console.error("Error al eliminar mensaje:", err);
-    //             return;
-    //         }
-    //         io.emit("messageDeleted", messageId);
-    //     });
-    // });
 
     socket.on("typing", (username) => {
         socket.broadcast.emit("userTyping", username);

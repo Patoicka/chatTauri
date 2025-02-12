@@ -1,7 +1,7 @@
 import { faArrowLeft, faRobot, faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useDispatch } from 'react-redux';
-import { setChat, setChatOption, setMessages } from '../store/store';
+import { setChat, setChatOption, setMessages, setOptionType } from '../store/store';
 
 export const Header = ({ newUsername }) => {
 
@@ -14,8 +14,9 @@ export const Header = ({ newUsername }) => {
 
     const clearMessages = () => {
         console.log('Limpia');
-        dispatch(setMessages([]));  
+        dispatch(setMessages([]));
         dispatch(setChatOption(false));
+        dispatch(setOptionType(''));
     };
 
     return (
