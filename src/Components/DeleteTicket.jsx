@@ -2,10 +2,11 @@ import React from 'react'
 import { useDispatch } from 'react-redux';
 import { io } from 'socket.io-client';
 import { setMessages } from '../store/store';
+import { API_URL } from '../config';
 
 export const DeleteTicket = () => {
 
-    const socket = io('http://localhost:4000');
+    const socket = io(API_URL);
     const dispatch = useDispatch();
 
     const selectDelete = (type) => {

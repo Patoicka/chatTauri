@@ -5,9 +5,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faCheckCircle, faFileUpload } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
+import { API_URL, UPLOAD_PHP_URL } from '../config';
 
 export const AddTicket = () => {
-    const socket = io('http://localhost:4000');
+    const socket = io(API_URL);
     const { user, firstMessage } = useSelector((state) => state.chat);
     const dispatch = useDispatch();
 
@@ -26,7 +27,7 @@ export const AddTicket = () => {
         formData.append('file', image);
 
         try {
-            const response = await axios.post('http://localhost/upload.php', formData, {
+            const response = await axios.post(UPLOAD_PHP_URL, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

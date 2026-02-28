@@ -5,8 +5,9 @@ import { Messages } from '../Components/Messages';
 import { Input } from '../Components/Input';
 import { useDispatch, useSelector } from 'react-redux';
 import { setLoader } from '../store/store';
+import { API_URL } from '../config';
 
-const socket = io('http://localhost:4000');
+const socket = io(API_URL);
 
 export const Chat = () => {
 

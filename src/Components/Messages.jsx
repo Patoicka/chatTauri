@@ -8,8 +8,9 @@ import { AddTicket } from "./AddTicket";
 import { FindTicket } from "./FindTicket";
 import { DeleteTicket } from "./DeleteTicket";
 import { SelectOption } from "./SelectOption";
+import { API_URL } from "../config";
 
-const socket = io('http://localhost:4000');
+const socket = io(API_URL);
 
 export const Messages = ({ messages: initialMessages, typingUser }) => {
     const { loader, selectChat, user, messages, optionType, chatOption, firstMessage } = useSelector((state) => state.chat);

@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setFirstMessages, setLoader } from '../store/store';
+import { API_URL } from '../config';
 
 export const Input = ({ handleSend, handleTyping }) => {
 
@@ -69,7 +70,7 @@ export const Input = ({ handleSend, handleTyping }) => {
 
         if (imageSelect) {
             try {
-                const response = await fetch('http://localhost:4000/upload-image', {
+                const response = await fetch(`${API_URL}/upload-image`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: imageUrl }),

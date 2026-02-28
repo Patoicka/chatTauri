@@ -1,3 +1,15 @@
+require("dotenv").config();
+
+const requiredEnv = ["DB_USER", "DB_PASSWORD"];
+const missing = requiredEnv.filter((key) => !process.env[key]);
+if (missing.length) {
+    console.error(
+        "Faltan variables de entorno. Copia .env.example a .env y rellena los valores:",
+        missing.join(", ")
+    );
+    process.exit(1);
+}
+
 const axios = require("axios");
 const cors = require("cors");
 const bodyParser = require("body-parser");
@@ -10,9 +22,18 @@ const multer = require("multer");
 const app = express();
 const server = http.createServer(app);
 
+const PORT = process.env.PORT || 4000;
+const CORS_ORIGINS = process.env.CORS_ORIGINS
+    ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+    : ["http://localhost:1420", "http://localhost:3001"];
+
+// APIs de IA: usar estas variables, nunca claves en el código (ver .env.example)
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/"); // Asegúrate de que esta carpeta exista en tu proyecto
+        cb(null, "uploads/");
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + "_" + file.originalname);
@@ -22,10 +43,10 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 const db = mysql.createConnection({
-    host: "localhost",
-    user: "admin_chat",
-    password: "199624",
-    database: "chatBot",
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || "chatBot",
 });
 
 db.connect(err => {
@@ -50,7 +71,7 @@ const io = socketIo(server, {
 });
 
 app.use(cors({
-    origin: ["http://localhost:1420", "http://localhost:3001"],
+    origin: CORS_ORIGINS,
     methods: ["GET", "POST", "OPTIONS"],
     credentials: true,
 }));
@@ -89,7 +110,9 @@ io.on("connection", (socket) => {
                 io.emit("thinking", false);
             } else {
                 io.emit("thinking", true);
-            };
+            }
+            // Para respuestas del ChatBot con DeepSeek: usar DEEPSEEK_API_KEY (nunca hardcodear la clave)
+            // Ej: const client = new DeepSeek({ apiKey: DEEPSEEK_API_KEY });
 
             const sql = "INSERT INTO chatbot (usuario, asunto, descripcion, date, imagen) VALUES (?, ?, ?, ?, ?)";
             db.query(sql, [usuario, asunto, descripcion, date, imagen], (err, result) => {
@@ -127,7 +150,7 @@ io.on("connection", (socket) => {
                 }
                 if (result.affectedRows > 0) {
                     console.log(`Mensaje con ID ${messageId} eliminado`);
-                    io.emit("messageDeleted", messageId); // Notificar a todos los clientes
+                    io.emit("messageDeleted", messageId);
                 } else {
                     console.log(`No se encontró un mensaje con ID ${messageId}`);
                 }
@@ -144,6 +167,6 @@ io.on("connection", (socket) => {
     });
 });
 
-server.listen(4000, () => {
-    console.log("Servidor corriendo en http://localhost:4000");
+server.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });

@@ -2,9 +2,10 @@ import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { io } from 'socket.io-client';
 import { setFirstMessages, setMessages, setOptionResult } from '../store/store';
+import { API_URL } from '../config';
 
 export const FindTicket = () => {
-    const socket = io('http://localhost:4000');
+    const socket = io(API_URL);
     const { optionResult } = useSelector((state) => state.chat);
     const dispatch = useDispatch();
 
